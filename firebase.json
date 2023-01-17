@@ -20,7 +20,8 @@
     }
   ],
   "hosting": {
-    "public": "public",
+    "predeploy": "npm run ionic-deploy --prefix workshop_app",
+    "public": "./workshop_app/build",
     "ignore": [
       "firebase.json",
       "**/.*",
