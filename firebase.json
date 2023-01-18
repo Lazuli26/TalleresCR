@@ -20,8 +20,8 @@
     }
   ],
   "hosting": {
-    "predeploy": "npm run deploy --prefix workshop_app",
-    "public": "./workshop_app/build",
+    "predeploy": "npm run deploy --prefix \"Workshop App\"",
+    "public": "./Workshop App/dist",
     "ignore": [
       "firebase.json",
       "**/.*",
