@@ -16,6 +16,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"],
+  "include": ["src", "../workshop_app/src/FirebaseConfig.ts", "../workshop_app/src/Login.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
