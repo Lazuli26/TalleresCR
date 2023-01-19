@@ -1,20 +1,16 @@
-import { getAnalytics } from 'firebase/analytics';
 import firebase from 'firebase/compat/app';
 import * as firebaseui from 'firebaseui'
 import 'firebaseui/dist/firebaseui.css'
 import React, { useEffect, useRef } from 'react';
-import { firebaseConfig } from './FirebaseConfig';
-
-// Initialize Firebase
-const FirebaseApp = firebase.initializeApp(firebaseConfig);
-const FirebaseAnalytics = getAnalytics(FirebaseApp);
+import { useState } from 'react';
+import { FirebaseUI } from './App';
+// import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 
-// Initialize the FirebaseUI Widget using Firebase.
-const ui = new firebaseui.auth.AuthUI(firebase.auth());
+
 
 export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
-    const uiConfig = useRef({
+    const uiConfig = useRef<firebaseui.auth.Config>({
         signInSuccessUrl: '<url-to-redirect-to-on-success>',
         signInOptions: [
             // Leave the lines as is for the providers you want to offer your users.
@@ -26,6 +22,8 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
             firebase.auth.PhoneAuthProvider.PROVIDER_ID,
             firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
         ],
+        signInFlow: "popup"
+
         // tosUrl and privacyPolicyUrl accept either url string or a callback
         // function.
 
@@ -39,36 +37,26 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
         */
     });
 
-    // The start method will wait until the DOM is loaded.
-        debugger
-    if (ui.isPendingRedirect()) {
-        ui.start('#firebaseui-auth-container', uiConfig.current);
-    }
 
-    useEffect(() => {
-        firebase.auth().onAuthStateChanged((user) => {
+    const [userSession, setUserSession] = useState<{user: firebase.User, accessToken: string} | null>(null)
+
+
+    React.useEffect(() => {
+        const unSubscribe = firebase.auth().onAuthStateChanged((user) => {
+            console.log(user)
             if (user) {
                 // User is signed in.
-                var displayName = user.displayName;
-                var email = user.email;
-                var emailVerified = user.emailVerified;
-                var photoURL = user.photoURL;
-                var uid = user.uid;
-                var phoneNumber = user.phoneNumber;
-                var providerData = user.providerData;
                 user.getIdToken().then(function (accessToken) {
+                    var userSession = {
+                        user,
+                        accessToken
+                    }
+
+                    setUserSession(userSession)
+
                     document.getElementById('sign-in-status')!.textContent = 'Signed in';
                     document.getElementById('sign-in')!.textContent = 'Sign out';
-                    document.getElementById('account-details')!.textContent = JSON.stringify({
-                        displayName: displayName,
-                        email: email,
-                        emailVerified: emailVerified,
-                        phoneNumber: phoneNumber,
-                        photoURL: photoURL,
-                        uid: uid,
-                        accessToken: accessToken,
-                        providerData: providerData
-                    }, null, '  ');
+                    document.getElementById('account-details')!.textContent = JSON.stringify(userSession, null, '  ');
                 });
             } else {
                 // User is signed out.
@@ -76,8 +64,12 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
                 document.getElementById('sign-in')!.textContent = 'Sign in';
                 document.getElementById('account-details')!.textContent = 'null';
             }
-        })
-    }, [])
+        });
+        // The start method will wait until the DOM is loaded.
+        FirebaseUI.start('#firebaseui-auth-container', uiConfig.current);
+
+        return unSubscribe
+    }, []);
 
     return <>
         <h1>Welcome to My Awesome App</h1>
