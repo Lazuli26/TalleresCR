@@ -10,7 +10,8 @@ import * as firebaseui from 'firebaseui';
 
 // Initialize Firebase
 const FirebaseApp = firebase.initializeApp(firebaseConfig);
-// const FirebaseAnalytics = getAnalytics(FirebaseApp);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FirebaseAnalytics = getAnalytics(FirebaseApp);
 
 // Initialize the FirebaseUI Widget using Firebase.
 export const FirebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
