@@ -1,7 +1,7 @@
 import firebase from 'firebase/compat/app';
 import * as firebaseui from 'firebaseui'
 import 'firebaseui/dist/firebaseui.css'
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useState } from 'react';
 import { FirebaseUI } from './App';
 // import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -41,6 +41,7 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
     const [userSession, setUserSession] = useState<{user: firebase.User, accessToken: string} | null>(null)
 
 
+    console.log(userSession)
     React.useEffect(() => {
         const unSubscribe = firebase.auth().onAuthStateChanged((user) => {
             console.log(user)
