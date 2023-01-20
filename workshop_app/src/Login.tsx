@@ -1,17 +1,19 @@
 import firebase from 'firebase/compat/app';
 import * as firebaseui from 'firebaseui'
 import 'firebaseui/dist/firebaseui.css'
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { FirebaseUI } from './App';
 // import { getAuth, onAuthStateChanged } from "firebase/auth";
 
+const AUTH_WIDGET_CONTAINER_ID = "firebaseui-auth-container";
 
-
+type userInfo = { user: firebase.User, accessToken: string } | null
+export const UserSessionProvider = React.createContext<{ session: userInfo, signOut: () => void } | null>(null)
 
 export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
     const uiConfig = useRef<firebaseui.auth.Config>({
-        signInSuccessUrl: '<url-to-redirect-to-on-success>',
+        signInSuccessUrl: window.location.origin,
         signInOptions: [
             // Leave the lines as is for the providers you want to offer your users.
             firebase.auth.GoogleAuthProvider.PROVIDER_ID,
@@ -19,10 +21,11 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
             // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
             // firebase.auth.GithubAuthProvider.PROVIDER_ID,
             firebase.auth.EmailAuthProvider.PROVIDER_ID,
-            firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+            // firebase.auth.PhoneAuthProvider.PROVIDER_ID,
             firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
         ],
-        signInFlow: "popup"
+        signInFlow: "popup",
+        autoUpgradeAnonymousUsers: true,
 
         // tosUrl and privacyPolicyUrl accept either url string or a callback
         // function.
@@ -38,13 +41,10 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
     });
 
 
-    const [userSession, setUserSession] = useState<{user: firebase.User, accessToken: string} | null>(null)
+    const [userSession, setUserSession] = useState<userInfo | undefined>()
 
-
-    console.log(userSession)
     React.useEffect(() => {
         const unSubscribe = firebase.auth().onAuthStateChanged((user) => {
-            console.log(user)
             if (user) {
                 // User is signed in.
                 user.getIdToken().then(function (accessToken) {
@@ -52,33 +52,40 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
                         user,
                         accessToken
                     }
-
                     setUserSession(userSession)
-
-                    document.getElementById('sign-in-status')!.textContent = 'Signed in';
-                    document.getElementById('sign-in')!.textContent = 'Sign out';
-                    document.getElementById('account-details')!.textContent = JSON.stringify(userSession, null, '  ');
                 });
             } else {
                 // User is signed out.
-                document.getElementById('sign-in-status')!.textContent = 'Signed out';
-                document.getElementById('sign-in')!.textContent = 'Sign in';
-                document.getElementById('account-details')!.textContent = 'null';
+                setUserSession(null)
             }
         });
-        // The start method will wait until the DOM is loaded.
-        FirebaseUI.start('#firebaseui-auth-container', uiConfig.current);
 
         return unSubscribe
     }, []);
 
-    return <>
-        <h1>Welcome to My Awesome App</h1>
-        <div id="sign-in-status"></div>
-        <div id="sign-in"></div>
-        <pre id="account-details"></pre>
+    useEffect(() => {
+        // The start method will wait until the DOM is loaded.
+        if (userSession == null && document.getElementById(AUTH_WIDGET_CONTAINER_ID))
+            FirebaseUI.start(`#${AUTH_WIDGET_CONTAINER_ID}`, uiConfig.current);
+    }, [userSession]);
 
-        <div id="firebaseui-auth-container" />
-        {children}
+
+    const signOut = useRef(() => firebase.auth().signOut().then(() => {
+        window.location.replace(window.location.origin);
+    })).current;
+
+    if (userSession === undefined) return <></>
+
+    if (userSession == null) return <>
+        <div id={AUTH_WIDGET_CONTAINER_ID} />
+    </>
+
+    return <>
+        <UserSessionProvider.Provider value={{ session: userSession, signOut }}>
+            {children}
+            {
+                // userSession && <Button onClick={signOut} style={{ position: "fixed", top: 0, right: 0 }} variant="contained" color="primary" children="Sign Out" />
+            }
+        </UserSessionProvider.Provider>
     </>
 }
