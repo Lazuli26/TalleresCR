@@ -6,21 +6,24 @@ import { AuthContainer } from './Login';
 import { getAnalytics } from 'firebase/analytics';
 import { firebaseConfig } from './FirebaseConfig';
 import * as firebaseui from 'firebaseui';
+import { ApplicationBar } from './AppBar';
 
 
 // Initialize Firebase
-const FirebaseApp = firebase.initializeApp(firebaseConfig);
+export const FirebaseApp = firebase.initializeApp(firebaseConfig);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FirebaseAnalytics = getAnalytics(FirebaseApp);
+export const FirebaseAnalytics = getAnalytics(FirebaseApp);
 
+firebase.auth().languageCode = "es"
 // Initialize the FirebaseUI Widget using Firebase.
 export const FirebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
+
 
 function App() {
   
   return (
     <AuthContainer>
-
+      <ApplicationBar/>
       <div className="App">
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
