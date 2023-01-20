@@ -1,7 +1,7 @@
 import { Box, AppBar, Toolbar, Typography, IconButton, alpha, InputBase, styled, Popover, Button, Avatar, Card, CardActions, CardHeader } from "@mui/material";
-import { PropsWithChildren, useState } from "react";
+import { PropsWithChildren, useEffect, useState } from "react";
 import SearchIcon from '@mui/icons-material/Search';
-import { UserSessionProvider } from "./Login";
+import { AUTH_WIDGET_CONTAINER_ID, UserSessionProvider } from "./Login";
 import React from "react";
 import { red } from "@mui/material/colors";
 
@@ -55,6 +55,7 @@ export const ApplicationBar: React.FC<PropsWithChildren> = ({ children }) => {
 
     const accButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
+        session?.renderLogin()
     };
     const handleAccPopClose = () => {
         setAnchorEl(null);
@@ -67,6 +68,12 @@ export const ApplicationBar: React.FC<PropsWithChildren> = ({ children }) => {
     const AccountAvatar = <Avatar src={session?.session?.user.photoURL ?? undefined} sx={{ bgcolor: red[500] }} aria-label="recipe">
         {session?.session?.user?.displayName?.charAt(0) ?? "A"}
     </Avatar>
+
+    useEffect(() => {
+        setAnchorEl(null)
+
+    }, [session?.session?.user])
+
     return <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static">
             <Toolbar>
@@ -92,12 +99,10 @@ export const ApplicationBar: React.FC<PropsWithChildren> = ({ children }) => {
                     edge="end"
                     color="inherit"
                     aria-label="open-profile"
-                    sx={{ mr: 2 }}
                     onClick={accButtonClick}
-                    disabled={!session?.session}
                 >
-                    
-{AccountAvatar}
+
+                    {session?.session ? AccountAvatar : <Button onClick={accButtonClick} variant="contained" color="warning" children="Iniciar Sesión" />}
 
                 </IconButton>
                 <Popover
@@ -106,21 +111,23 @@ export const ApplicationBar: React.FC<PropsWithChildren> = ({ children }) => {
                     anchorEl={anchorEl}
                     onClose={handleAccPopClose}
 
+                    keepMounted
                     anchorOrigin={{
                         vertical: 'bottom',
                         horizontal: 'left',
                     }}
                 >
-                    <Card sx={{ maxWidth: 345 }}>
-                        <CardHeader
-                            avatar={AccountAvatar}
-                            title={session?.session?.user.displayName ?? "Anónimo"}
-                            subheader={session?.session?.user.email ?? ""}
-                        />
-                        <CardActions disableSpacing>
-                            <Button variant="text" color="warning" onClick={session?.signOut} children="Cerrar sesión" />
-                        </CardActions>
-                    </Card>
+                    {session?.session ?
+                        <Card sx={{ maxWidth: 345 }}>
+                            <CardHeader
+                                avatar={AccountAvatar}
+                                title={session?.session?.user.displayName ?? "Anónimo"}
+                                subheader={session?.session?.user.email ?? ""}
+                            />
+                            <CardActions disableSpacing>
+                                <Button variant="text" color="warning" onClick={session?.signOut} children="Cerrar sesión" />
+                            </CardActions>
+                        </Card> : <div id={AUTH_WIDGET_CONTAINER_ID} />}
                 </Popover>
             </Toolbar>
         </AppBar>

@@ -1,17 +1,18 @@
 import firebase from 'firebase/compat/app';
 import * as firebaseui from 'firebaseui'
 import 'firebaseui/dist/firebaseui.css'
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { FirebaseUI } from './App';
 // import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-const AUTH_WIDGET_CONTAINER_ID = "firebaseui-auth-container";
+export const AUTH_WIDGET_CONTAINER_ID = "firebaseui-auth-container";
 
 type userInfo = { user: firebase.User, accessToken: string } | null
-export const UserSessionProvider = React.createContext<{ session: userInfo, signOut: () => void } | null>(null)
+export const UserSessionProvider = React.createContext<{ session: userInfo, signOut: () => void, renderLogin: () =>void } | null>(null)
 
 export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+
     const uiConfig = useRef<firebaseui.auth.Config>({
         signInSuccessUrl: window.location.origin,
         signInOptions: [
@@ -43,6 +44,16 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
 
     const [userSession, setUserSession] = useState<userInfo | undefined>()
 
+
+    const tryRenderLoginWidget = useCallback(
+        () => {
+            // The start method will wait until the DOM is loaded.
+            if (userSession == null && document.getElementById(AUTH_WIDGET_CONTAINER_ID))
+                FirebaseUI.start(`#${AUTH_WIDGET_CONTAINER_ID}`, uiConfig.current);
+        },
+        [userSession],
+    )
+
     React.useEffect(() => {
         const unSubscribe = firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -64,10 +75,8 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
     }, []);
 
     useEffect(() => {
-        // The start method will wait until the DOM is loaded.
-        if (userSession == null && document.getElementById(AUTH_WIDGET_CONTAINER_ID))
-            FirebaseUI.start(`#${AUTH_WIDGET_CONTAINER_ID}`, uiConfig.current);
-    }, [userSession]);
+        tryRenderLoginWidget()
+    }, [tryRenderLoginWidget, userSession]);
 
 
     const signOut = useRef(() => firebase.auth().signOut().then(() => {
@@ -76,12 +85,8 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
 
     if (userSession === undefined) return <></>
 
-    if (userSession == null) return <>
-        <div id={AUTH_WIDGET_CONTAINER_ID} />
-    </>
-
     return <>
-        <UserSessionProvider.Provider value={{ session: userSession, signOut }}>
+        <UserSessionProvider.Provider value={{ session: userSession, signOut, renderLogin: tryRenderLoginWidget }}>
             {children}
             {
                 // userSession && <Button onClick={signOut} style={{ position: "fixed", top: 0, right: 0 }} variant="contained" color="primary" children="Sign Out" />
