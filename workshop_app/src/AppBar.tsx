@@ -4,6 +4,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { AUTH_WIDGET_CONTAINER_ID, UserSessionProvider } from "./Login";
 import React from "react";
 import { red } from "@mui/material/colors";
+import GarageIcon from '@mui/icons-material/Garage';
 
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -77,13 +78,14 @@ export const ApplicationBar: React.FC<PropsWithChildren> = ({ children }) => {
     return <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static">
             <Toolbar>
+                        <GarageIcon fontSize="large"/>
                 <Typography
                     variant="h6"
                     noWrap
                     component="div"
                     sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
                 >
-                    La mejor aplicación del mundo
+                    CR Parts
                 </Typography>
                 <Search>
                     <SearchIconWrapper>

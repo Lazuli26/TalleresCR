@@ -1,14 +1,14 @@
-import firebase from 'firebase/compat/app';
+import { EmailAuthProvider, GoogleAuthProvider, User } from 'firebase/auth';
 import * as firebaseui from 'firebaseui'
 import 'firebaseui/dist/firebaseui.css'
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useState } from 'react';
-import { FirebaseUI } from './App';
+import { FirebaseAuth, FirebaseUI } from './FirebaseConfig';
 // import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export const AUTH_WIDGET_CONTAINER_ID = "firebaseui-auth-container";
 
-type userInfo = { user: firebase.User, accessToken: string } | null
+type userInfo = { user: User, accessToken: string } | null
 export const UserSessionProvider = React.createContext<{ session: userInfo, signOut: () => void, renderLogin: () =>void } | null>(null)
 
 export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
@@ -17,13 +17,13 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
         signInSuccessUrl: window.location.origin,
         signInOptions: [
             // Leave the lines as is for the providers you want to offer your users.
-            firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            GoogleAuthProvider.PROVIDER_ID,
             // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
             // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
             // firebase.auth.GithubAuthProvider.PROVIDER_ID,
-            firebase.auth.EmailAuthProvider.PROVIDER_ID,
+            EmailAuthProvider.PROVIDER_ID,
             // firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-            firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+            // firebase.auth.AnonymousAuthProvider.PROVIDER_ID
         ],
         signInFlow: "popup",
         autoUpgradeAnonymousUsers: true,
@@ -55,7 +55,7 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
     )
 
     React.useEffect(() => {
-        const unSubscribe = firebase.auth().onAuthStateChanged((user) => {
+        const unSubscribe = FirebaseAuth.onAuthStateChanged((user) => {
             if (user) {
                 // User is signed in.
                 user.getIdToken().then(function (accessToken) {
@@ -75,11 +75,12 @@ export const AuthContainer: React.FC<React.PropsWithChildren<{}>> = ({ children 
     }, []);
 
     useEffect(() => {
+        console.log(userSession)
         tryRenderLoginWidget()
     }, [tryRenderLoginWidget, userSession]);
 
 
-    const signOut = useRef(() => firebase.auth().signOut().then(() => {
+    const signOut = useRef(() => FirebaseAuth.signOut().then(() => {
         window.location.replace(window.location.origin);
     })).current;
 
