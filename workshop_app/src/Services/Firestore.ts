@@ -40,6 +40,7 @@ export const FirestoreService = {
                 if (doc.exists()) {
                     Firestore.updateDoc(userDoc, {
                         numeros: {
+                            ...doc.data().numeros,
                             [field]: Firestore.arrayUnion(number)
                         },
                     })
